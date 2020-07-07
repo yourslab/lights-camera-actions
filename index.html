@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
   <meta charset="utf-8" />
-  <title>balenaBLE</title>
+  <title>Your Lights</title>
   <link rel="stylesheet" href="style.css" />
   <script src="ble-client.js"></script>
+  <script src="wyze-checker.js"></script>
   <body>
-    <h1>balenaBLE</h1>
+    <h1>Your Lights</h1>
 
     <div class="lamp">
       <?xml version="1.0" encoding="iso-8859-1"?>
@@ -117,7 +118,7 @@
 
     <div id="stats">
       <div id="not-connected">
-        <p>Connect to a balenaBLE device to get started</p>
+        <p>Connect to your lights to get started</p>
         <button id="btn-connect" class="btn">Connect</button>
       </div>
       <div id="container" class="hidden">
@@ -140,8 +141,7 @@
 </html>
 <script>
   /* updates UI when LED is turned on/off */
-  function handleLedStatusChanged(event) {
-    let status = event.target.value.getUint8(0);
+  function handleLedStatusChanged(status) {
     rays = document.getElementsByClassName("rays");
 
     if (status) {
@@ -172,6 +172,7 @@
   }
 
   var balenaBLE = new BalenaBLE();
+  var wyzeChecker = new WyzeChecker(balenaBLE);
   var toggle = document.getElementById("toggle");
 
   /* connect to peripheral, load data and add event listeners */
@@ -183,7 +184,8 @@
         await balenaBLE.connect();
         await balenaBLE.setLedCharacteristic();
         document.getElementById("not-connected").classList.add("hidden");
-
+        /* Poll the Wyze API to update the last time person was seen and switch lights when needed. */
+        setInterval(wyzeChecker.requestPoller, 2000);
         toggle.addEventListener("change", (e) => {
           if (e.target.checked) {
             balenaBLE.writeLed(1);
@@ -199,7 +201,6 @@
             }, 1000);
           }
         });
-
         document.getElementById("container").classList.remove("hidden");
       } catch (error) {
         console.log(error.message);

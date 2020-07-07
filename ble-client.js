@@ -5,6 +5,10 @@ class BalenaBLE {
     this.cpuVendor = null;
     this.cpuSpeed = null;
     this.onDisconnected = this.onDisconnected.bind(this);
+    this.switchedTs = new Date();
+    this.switchedTs.setHours(1);
+    this.status = null;
+    console.log(this.switchedTs);
   }
 
   /* the LED characteristic providing on/off capabilities */
@@ -15,32 +19,28 @@ class BalenaBLE {
     const switchCharacteristic = await service.getCharacteristic(
       "a22b0090-ebdd-49ac-b2e7-40eb55f5d0ab"
     );
-    const notifyCharacteristic = await service.getCharacteristic(
+    /*const notifyCharacteristic = await service.getCharacteristic(
       "a22b0070-ebdd-49ac-b2e7-40eb55f5d0ab"
-    );
+    );*/
     const characteristics = await service.getCharacteristics();
     console.log(characteristics);
     // characteristic.startNotifications();
     this.led = switchCharacteristic;
-    this.notify = notifyCharacteristic;
+    //this.notify = notifyCharacteristic;
 
-    await this.notify.startNotifications();
+    //await this.notify.startNotifications();
 
     //await this.led.startNotifications();
 
-    this.notify.addEventListener(
-      "characteristicvaluechanged",
-      handleLedStatusChanged
-    );
+    /*this.notify.addEventListener("characteristicvaluechanged", (event) => {
+      handleLedStatusChanged(event);
+    });*/
   }
 
   /* request connection to a BalenaBLE device */
   async request() {
     let options = {
-      optionalServices: [
-        "a22bd383-ebdd-49ac-b2e7-40eb55f5d0ab",
-        "battery_service",
-      ],
+      optionalServices: ["a22bd383-ebdd-49ac-b2e7-40eb55f5d0ab"],
     };
     options.acceptAllDevices = true;
     if (navigator.bluetooth == undefined) {
@@ -64,13 +64,17 @@ class BalenaBLE {
 
   /* read LED state */
   async readLed() {
-    await this.led.readValue();
+    let value = await this.led.readValue();
+    this.status = value.getUint8(0);
+    handleLedStatusChanged(this.status);
   }
 
   /* change LED state */
   async writeLed(data) {
     await this.led.writeValue(Uint8Array.of(data));
-    await this.readLed();
+    this.status = data;
+    this.switchedTs = new Date();
+    handleLedStatusChanged(this.status);
   }
 
   /* disconnect from peripheral */
