@@ -15,7 +15,7 @@
   "dependencies": {
     "bleno": "*",
     "onoff": "4.1.3",
-    "systeminformation": "4.27.11",
+    "systeminformation": "4.30.5",
     "webbluetooth": "^2.1.0"
   }
 }
